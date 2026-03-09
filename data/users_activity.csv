@@ -1,0 +1,8 @@
+user_id,event_type,event_time,device,country
+1,login,2024-01-01 10:00,mobile,DE
+1,click,2024-01-01 10:05,mobile,DE
+2,login,2024-01-02 09:00,desktop,FR
+2,click,2024-01-02 09:10,desktop,FR
+3,login,2024-01-03 08:00,mobile,US
+3,logout,2024-01-03 08:30,mobile,US
+3,login,2024-01-03 08:00,mobile,US
