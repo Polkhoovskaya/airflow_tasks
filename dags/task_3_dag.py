@@ -2,8 +2,6 @@ from airflow.decorators import dag, task
 from datetime import datetime, timedelta
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 import pandas as pd
-#for testing
-# from sqlalchemy import create_engine 
 
 # retry logic 
 default_args = {
@@ -78,22 +76,6 @@ def task_3_etl():
         )
 
         print(f"Data loaded into table {table_name}.")
-
-    #for testing
-    # @task() 
-    # def load_into_sqlite(df: pd.DataFrame) -> None:
-    #     print("Loading data into SQLite...")
-    #     engine = create_engine("sqlite:///users_activity.db")
-
-    #     print("Connection established, loading data...")
-    #     df.to_sql(
-    #         name=table_name, 
-    #         con=engine,
-    #         if_exists="fail",
-    #         index=False
-    #     )
-    #     print(f"{len(df)} rows inserted.")
-
 
     csv_data = read_csv()
     validated_data = validate_schema(csv_data)
