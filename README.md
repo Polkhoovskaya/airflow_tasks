@@ -43,3 +43,60 @@ Create an **Airflow DAG** with the following tasks:
 - The **DAG runs successfully without manual fixes**.
 - **Retry logic is implemented** for failed tasks.
 - **Logs are visible in the Airflow UI** for monitoring and debugging.
+
+
+
+
+
+
+# TASK 4 – File Sensor Pipeline (Real World)
+
+## Dataset
+`campaign_data.csv`
+
+**Folder:**  
+`/data/incoming/`
+
+---
+
+## Tasks
+
+Create an **Airflow DAG** with the following tasks:
+
+1. **File Sensor**
+   - Wait for a new file to appear in `/data/incoming/`.
+
+2. **Validate Schema**
+   - Ensure the required columns exist.
+   - Verify correct data types and basic data validity.
+
+3. **Calculate Metrics**
+   - Compute the following fields:
+     - **CTR** = `clicks / impressions`
+     - **CPC** = `spend / clicks`
+
+4. **Load into SQL**
+   - Insert the processed data into the target SQL table.
+
+5. **Move Processed File**
+   - Move the processed file to `/processed/`.
+
+---
+
+## Output Table
+
+campaign_id
+event_date
+total_clicks
+total_impressions
+total_spend
+ctr
+cpc
+
+---
+
+## Acceptance Criteria
+
+- **Fully automated pipeline**
+- **No manual trigger required**
+- **Each file is processed only once**
