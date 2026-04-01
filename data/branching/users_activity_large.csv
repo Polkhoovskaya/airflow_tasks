@@ -1,0 +1,26 @@
+user_id,event_type,event_time,device,country
+1,login,2024-01-01 10:00,mobile,DE
+1,click,2024-01-01 10:05,mobile,DE
+1,purchase,2024-01-01 10:15,mobile,DE
+2,login,2024-01-02 09:00,desktop,FR
+2,click,2024-01-02 09:10,desktop,FR
+2,purchase,2024-01-02 09:30,desktop,FR
+2,logout,2024-01-02 09:45,desktop,FR
+3,login,2024-01-03 08:00,mobile,US
+3,click,2024-01-03 08:10,mobile,US
+3,logout,2024-01-03 08:30,mobile,US
+4,login,2024-01-04 11:00,tablet,AZ
+4,click,2024-01-04 11:10,tablet,AZ
+4,purchase,2024-01-04 11:20,tablet,AZ
+4,logout,2024-01-04 11:55,tablet,AZ
+5,login,2024-01-05 07:30,mobile,TR
+5,click,2024-01-05 07:35,mobile,TR
+5,purchase,2024-01-05 07:50,mobile,TR
+6,login,2024-01-05 14:00,desktop,DE
+6,click,2024-01-05 14:05,desktop,DE
+6,purchase,2024-01-05 14:20,desktop,DE
+7,login,2024-01-06 09:00,mobile,US
+7,click,2024-01-06 09:05,mobile,US
+8,login,2024-01-07 16:00,mobile,AZ
+8,click,2024-01-07 16:10,mobile,AZ
+8,logout,2024-01-07 16:45,mobile,AZ
