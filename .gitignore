@@ -26,7 +26,6 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Docker specific files
-*.env
 *.dockerignore
 
 # OS files

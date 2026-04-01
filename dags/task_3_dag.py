@@ -2,6 +2,7 @@ from airflow.decorators import dag, task
 from datetime import datetime, timedelta
 from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 import pandas as pd
+import os
 
 # retry logic 
 default_args = {
@@ -10,7 +11,8 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-CSV_PATH = "./data/users_activity.csv"
+BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
+CSV_PATH = os.path.join(BASE_DIR, "users_activity.csv")
 table_name = "UsersActivity"
 
 @dag(

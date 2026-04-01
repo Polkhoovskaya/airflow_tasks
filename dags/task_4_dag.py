@@ -14,7 +14,8 @@ default_args = {
     "retry_delay": timedelta(minutes=5),
 }
 
-INCOMING_FOLDER = "./data/incoming"
+BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
+INCOMING_FOLDER = os.path.join(BASE_DIR, "incoming")
 
 # DAG definition
 @dag(
