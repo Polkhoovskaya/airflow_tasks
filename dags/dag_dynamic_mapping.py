@@ -1,5 +1,6 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
+
 import os
 import pandas as pd
 import logging
@@ -17,7 +18,7 @@ def on_success_callback(context):
 
 @dag(
     dag_id="dag_dynamic_mapping",
-    start_date=datetime(2026, 4, 3),
+    start_date=datetime(2026, 4, 6),
     catchup=False,
     tags=["dynamic_mapping", "task"],
 )
@@ -27,31 +28,34 @@ def dag_dynamic_mapping_etl():
     # returns a list of full file paths found in data/incoming
     @task()
     def list_files():
-        print("Listing files in incoming folder...")
-        files = os.listdir(INCOMING_FOLDER)
-        csv_files = [os.path.join(INCOMING_FOLDER, f) for f in files if f.endswith(".csv")]
-        print(f"Found {len(csv_files)} CSV files.")
+        logging.info("Listing files in incoming folder...")
+
+        if not os.path.exists(INCOMING_FOLDER):
+            logging.warning(f"Folder does not exist: {INCOMING_FOLDER}")
+            return []
+
+        csv_files = [os.path.join(INCOMING_FOLDER, f) for f in os.listdir(INCOMING_FOLDER) if f.endswith(".csv")]
+        logging.info(f"Found {len(csv_files)} CSV files.")
         return csv_files
 
     @task(on_failure_callback=on_failure_callback)
     def process_file(file_path: str) -> dict:
-        print("Processing file...")
-        # Reading CSV file
-        df = pd.read_csv(file_path)
-        # Schema validation
-        required_columns = {'campaign_id', 'clicks', 'impressions', 'spend', 'event_date'}
-        missing_columns = required_columns - set(df.columns)
+        logging.info("Processing file...")
 
+        df = pd.read_csv(file_path)
+        logging.info(f"Read {len(df)} rows from {file_path}")
+
+        logging.info("Validating schema...")
+        required_columns = {'campaign_id', 'clicks', 'impressions', 'spend', 'event_date'}
+
+        missing_columns = required_columns - set(df.columns)
         if missing_columns:
             raise ValueError(f"Missing columns: {missing_columns}")
+        logging.info("Schema validation passed.")
 
-        print("Schema validation passed.")
-
-        # computes CTR and CPC
+        logging.info("Calculating CTR and CPC...")
         df["ctr"] = (df["clicks"] / df["impressions"]).fillna(0).replace([float("inf")], 0)
         df["cpc"] = (df["spend"] / df["clicks"]).fillna(0).replace([float("inf")], 0)
-      
-        logging.info(f"Processing file: {file_path}")
 
         return {
             'file': file_path,
@@ -61,7 +65,8 @@ def dag_dynamic_mapping_etl():
 
     @task(on_success_callback=on_success_callback)
     def consolidate_results(results: list):
-        print("Consolidating results...")
+        logging.info("Consolidating results...")
+
         total_files = len(results)
         total_rows = sum(result['rows'] for result in results)
         empty_files = [result['file'] for result in results if result['status'] == 'empty']
@@ -74,7 +79,7 @@ def dag_dynamic_mapping_etl():
             raise ValueError("All files are empty!")
 
     files = list_files()
-    # This task is mapped using .expand(file_path=list_files())
+    # This task is mapped using .expand(file_path=list_files()) = Dynamic Task Mapping
     results = process_file.expand(file_path=files)
     consolidate_results(results)
 
