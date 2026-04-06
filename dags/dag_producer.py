@@ -12,9 +12,7 @@
 # Backfill would only execute the specific runs that you manually trigger.
 
 # •	What happens to dag_consumer when the backfill completes? Does it trigger once or 5 times? >>
-# When the backfill completes, dag_consumer will trigger once for each run that was backfilled. 
-# If you backfill 5 runs, then dag_consumer will trigger 5 times, once for each of the backfilled runs.
-# (I have dag_consumer running only once, I'm working on a fix)
+# 5 dataset events → 1 consumer DAG run
 
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
