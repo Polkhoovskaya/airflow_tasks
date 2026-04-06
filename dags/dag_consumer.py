@@ -1,26 +1,28 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
+from airflow.datasets import Dataset
+from airflow.operators.python import get_current_context
+
 import os
 import pandas as pd
 import logging
-from airflow.datasets import Dataset
 
 
 BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
 CSV_PATH = os.path.join(BASE_DIR, "incoming/campaign_data.csv")
+USERS_SUMMARY_DATASET = Dataset("file:///tmp/users_summary.json")
 
 @dag(
-    dag_id='dag_consumer_1',
-    schedule=[Dataset("file:///tmp/users_summary.json")],
+    dag_id='dag_consumer',
+    schedule=[USERS_SUMMARY_DATASET],
     catchup=False,
     tags=["consumer", "task"],
 )
 
-
 def consumer_etl():
 
     @task()
-    def validate_csv(ds=None):
+    def validate_csv() -> str:
         logging.info("Reading CSV file...")
         df = pd.read_csv(CSV_PATH, parse_dates=["event_date"])
         logging.info(f"Read {len(df)} rows.")
@@ -31,37 +33,34 @@ def consumer_etl():
         missing_columns = required_columns - set(df.columns)
         if missing_columns:
              raise ValueError(f"Missing required columns: {missing_columns}.")
-
         logging.info("Schema validation passed.")
 
-        path = f"/tmp/campaign_validated_{ds}.csv"
+        run_date = datetime.now().strftime("%Y-%m-%d")
+        path = f"/tmp/campaign_validated_{run_date}.csv"
         df.to_csv(path, index=False)
-
         logging.info(f"Validated data saved to {path}")
         return path
 
     @task()
-    def clean_data(input_path: str, ds=None):
+    def clean_data(input_path: str) -> str:
         df = pd.read_csv(input_path, parse_dates=["event_date"])
-
         logging.info("Dropping duplicates...")
         df = df.drop_duplicates()
         logging.info(f"DataFrame now has {len(df)} rows after dropping duplicates.")
         
-        path = f"/tmp/campaign_cleaned_{ds}.csv"
+        run_date = datetime.now().strftime("%Y-%m-%d")
+        path = f"/tmp/campaign_cleaned_{run_date}.csv"
         df.to_csv(path, index=False)
-
         logging.info(f"Cleaned data saved to {path}")
         return path
 
     @task()
-    def produce_combined_report(input_path: str, ds=None, **context):
+    def produce_combined_report(input_path: str):
 
-        # Read JSON form tmp
-        ds = context["ds"]
-        summary_path = f"/tmp/users_summary_{ds}.json"
+        # Read JSON from  tmp
+        run_date = datetime.now().strftime("%Y-%m-%d")
+        summary_path = f"/tmp/users_summary_{run_date}.json"
         
-        logging.info(ds)
         logging.info(f"Reading summary from {summary_path}")
         summary_df = pd.read_json(summary_path, convert_dates=["event_date"])
         logging.info(f"Read summary with {len(summary_df)} rows.")
@@ -76,8 +75,10 @@ def consumer_etl():
         combined_df = pd.merge(campaign_df, summary_df, on="event_date", how="inner")
         logging.info(f"Combined data has {len(combined_df)} rows.")
         logging.info(combined_df)
+        logging.info("First 3 rows:\n" + combined_df.head(3).to_string())
 
-        producer_run_timestamp = context["ts"]
+        context = get_current_context()
+        producer_run_timestamp = context.get("asset_trigger_timestamp") or datetime.now().isoformat()
 
         logging.info(f"Processing data produced at: {producer_run_timestamp}")
 
