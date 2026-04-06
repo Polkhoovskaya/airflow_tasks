@@ -1,12 +1,13 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
-# from airflow.decorators import task_group
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.empty import EmptyOperator
+from airflow.operators.python import get_current_context
+
 import os
 import logging
 import pandas as pd
-from airflow.operators.python import get_current_context
+
 
 # retry logic 
 default_args = {
@@ -20,7 +21,7 @@ BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
 @dag(
     dag_id="dag_taskgroups_xcom",
     default_args=default_args,
-    start_date=datetime(2026, 4, 2),
+    start_date=datetime(2026, 4, 6),
     schedule="@daily",
     catchup=False,
     tags=["taskgroups", "task"]
@@ -32,24 +33,33 @@ def dag_taskgroups_xcom_etl():
     def read_users():
         file_path = os.path.join(BASE_DIR, "users_activity.csv")
         
-        print("Reading CSV file...")
+        logging.info("Reading CSV file...")
         df = pd.read_csv(file_path)
-        print(f"Read {len(df)} rows.")
+        logging.info(f"Read {len(df)} rows.")
+
         return file_path
 
     @task()
     def transform_users(file_path: str):
         df = pd.read_csv(file_path)
 
+        logging.info("Deleting all rows where user_id = NULL / NaN")
         df = df.dropna(subset=["user_id"])
+
+        logging.info(f"Rows after cleaning: {len(df)}")
+
         output_path = os.path.join(BASE_DIR, "processed_users.csv")
         df.to_csv(output_path, index=False)
+
+        logging.info(f"Saved to {output_path}")
         return output_path
 
     @task()
-    def push_users_summary(output_path, **context):
+    def push_users_summary(output_path):
         df = pd.read_csv(output_path)
+        context = get_current_context()
 
+        logging.info("Calculating summary statistics...")
         summary = {
             "total_rows_users": len(df),
             "unique_users": df["user_id"].nunique(),
@@ -58,13 +68,13 @@ def dag_taskgroups_xcom_etl():
 
         logging.info(f"Users activity summary: {summary}")
 
+        logging.info("Pushing summary to XCom...")
         context["task_instance"].xcom_push(
             key="users_summary",
             value=summary
         )
 
-    # @task_group(group_id='group_users')
-    # def group_users():
+    # "group_users" TaskGroup
     with TaskGroup('group_users') as group_users:
         t1 = read_users()
         t2 = transform_users(t1)
@@ -77,25 +87,36 @@ def dag_taskgroups_xcom_etl():
     def read_campaigns():
         file_path = os.path.join(BASE_DIR, "incoming/campaign_data.csv")
         
-        print("Reading CSV file...")
+        logging.info("Reading CSV file...")
         df = pd.read_csv(file_path)
-        print(f"Read {len(df)} rows.")
+        logging.info(f"Read {len(df)} rows.")
+
         return file_path
 
     @task()
     def transform_campaigns(file_path: str):
         df = pd.read_csv(file_path)
 
+        logging.info("Deleting all rows where campaign_id = NULL / NaN")
         df = df.dropna(subset=["campaign_id"])
+
+        logging.info(f"Rows after cleaning: {len(df)}")
+
         output_path = os.path.join(BASE_DIR, "processed_campaigns.csv")
         df.to_csv(output_path, index=False)
+
+        logging.info(f"Saved to {output_path}")
         return output_path
 
     @task()
-    def push_campaign_summary(output_path, **context):
+    def push_campaign_summary(output_path):
         df = pd.read_csv(output_path)
+        context = get_current_context()
+
+        logging.info("Calculating CTR...")
         df["ctr"] = df["clicks"] / df["impressions"]
 
+        logging.info("Calculating summary statistics...")
         summary = {
             "total_rows_campaigns": len(df),
             "total_spend": df["spend"].sum(),
@@ -104,13 +125,13 @@ def dag_taskgroups_xcom_etl():
 
         logging.info(f"Campaigns summary: {summary}")
 
+        logging.info("Pushing summary to XCom...")
         context["task_instance"].xcom_push(
             key="campaigns_summary",
             value=summary
         )
 
-    # @task_group(group_id='group_campaigns')
-    # def group_campaigns():
+    # "group_campaigns" TaskGroup
     with TaskGroup('group_campaigns') as group_campaigns:
         t1 = read_campaigns()
         t2 = transform_campaigns(t1)
@@ -121,9 +142,9 @@ def dag_taskgroups_xcom_etl():
     @task()
     def join_report():
         context = get_current_context()
-        summary = (context['ti'].xcom_pull(key="users_summary", task_ids="group_users.push_users_summary")) | (context['ti'].xcom_pull(key="campaigns_summary", task_ids="group_campaigns.push_campaign_summary"))
-       
+        
         logging.info(f"Joining reports...")
+        summary = (context['ti'].xcom_pull(key="users_summary", task_ids="group_users.push_users_summary")) | (context['ti'].xcom_pull(key="campaigns_summary", task_ids="group_campaigns.push_campaign_summary"))
         logging.info(f"Summary: {summary}")
 
     [group_users, group_campaigns] >> join_report()
