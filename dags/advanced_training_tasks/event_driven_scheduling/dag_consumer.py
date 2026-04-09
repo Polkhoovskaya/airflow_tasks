@@ -1,16 +1,14 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
-from airflow.datasets import Dataset
 from airflow.operators.python import get_current_context
 
-import os
+from advanced_training_tasks.paths import build_path
+from advanced_training_tasks.constants import USERS_SUMMARY_DATASET
+
 import pandas as pd
 import logging
 
-
-BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
-CSV_PATH = os.path.join(BASE_DIR, "incoming/campaign_data.csv")
-USERS_SUMMARY_DATASET = Dataset("file:///tmp/users_summary.json")
+CSV_PATH = build_path("incoming", "campaign_data.csv")
 
 @dag(
     dag_id='dag_consumer',

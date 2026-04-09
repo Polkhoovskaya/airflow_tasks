@@ -3,14 +3,14 @@ from datetime import datetime, timedelta
 from airflow.sensors.base import PokeReturnValue
 from airflow.operators.python import get_current_context
 
+from advanced_training_tasks.paths import build_path
+
 import os
 import requests
 import pandas as pd
 import logging
 
-
-BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
-INCOMING_FOLDER = os.path.join(BASE_DIR, "incoming")
+INCOMING_FOLDER = build_path("incoming")
 
 # Callback for sensor failures
 def sensor_failure_callback():

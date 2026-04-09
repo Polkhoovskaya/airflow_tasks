@@ -4,7 +4,12 @@ from airflow.utils.task_group import TaskGroup
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import get_current_context
 
-import os
+from advanced_training_tasks.paths import build_path
+
+from common.transformation.cleaning import drop_nulls
+from common.transformation.users import users_summary
+from common.transformation.campaigns import campaigns_summary
+
 import logging
 import pandas as pd
 
@@ -15,8 +20,6 @@ default_args = {
     "retries": 2,
     "retry_delay": timedelta(minutes=3),
 }
-
-BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
 
 @dag(
     dag_id="dag_taskgroups_xcom",
@@ -31,7 +34,7 @@ def dag_taskgroups_xcom_etl():
 
     @task()
     def read_users():
-        file_path = os.path.join(BASE_DIR, "users_activity.csv")
+        file_path = build_path("users_activity.csv")
         
         logging.info("Reading CSV file...")
         df = pd.read_csv(file_path)
@@ -44,11 +47,10 @@ def dag_taskgroups_xcom_etl():
         df = pd.read_csv(file_path)
 
         logging.info("Deleting all rows where user_id = NULL / NaN")
-        df = df.dropna(subset=["user_id"])
-
+        df = drop_nulls(df, "user_id")
         logging.info(f"Rows after cleaning: {len(df)}")
 
-        output_path = os.path.join(BASE_DIR, "processed_users.csv")
+        output_path = build_path("processed_users.csv")
         df.to_csv(output_path, index=False)
 
         logging.info(f"Saved to {output_path}")
@@ -60,12 +62,7 @@ def dag_taskgroups_xcom_etl():
         context = get_current_context()
 
         logging.info("Calculating summary statistics...")
-        summary = {
-            "total_rows_users": len(df),
-            "unique_users": df["user_id"].nunique(),
-            "unique_countries": df["country"].nunique()
-        }
-
+        summary = users_summary(df)
         logging.info(f"Users activity summary: {summary}")
 
         logging.info("Pushing summary to XCom...")
@@ -85,7 +82,7 @@ def dag_taskgroups_xcom_etl():
 
     @task()
     def read_campaigns():
-        file_path = os.path.join(BASE_DIR, "incoming/campaign_data.csv")
+        file_path = build_path("incoming", "campaign_data.csv")
         
         logging.info("Reading CSV file...")
         df = pd.read_csv(file_path)
@@ -98,11 +95,11 @@ def dag_taskgroups_xcom_etl():
         df = pd.read_csv(file_path)
 
         logging.info("Deleting all rows where campaign_id = NULL / NaN")
-        df = df.dropna(subset=["campaign_id"])
+        df = drop_nulls(df, "campaign_id")
 
         logging.info(f"Rows after cleaning: {len(df)}")
 
-        output_path = os.path.join(BASE_DIR, "processed_campaigns.csv")
+        output_path = build_path("processed_campaigns.csv")
         df.to_csv(output_path, index=False)
 
         logging.info(f"Saved to {output_path}")
@@ -113,15 +110,7 @@ def dag_taskgroups_xcom_etl():
         df = pd.read_csv(output_path)
         context = get_current_context()
 
-        logging.info("Calculating CTR...")
-        df["ctr"] = df["clicks"] / df["impressions"]
-
-        logging.info("Calculating summary statistics...")
-        summary = {
-            "total_rows_campaigns": len(df),
-            "total_spend": df["spend"].sum(),
-            "avg_ctr": df["ctr"].mean()
-        }
+        summary = campaigns_summary(df)
 
         logging.info(f"Campaigns summary: {summary}")
 

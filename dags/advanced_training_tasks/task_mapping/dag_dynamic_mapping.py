@@ -1,20 +1,15 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
+from common.utils.airflow_callbacks import on_failure_callback, on_success_callback
+from common.validation.schema import validate_columns
+
+from advanced_training_tasks.paths import build_path
 
 import os
 import pandas as pd
 import logging
 
-BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
-INCOMING_FOLDER = os.path.join(BASE_DIR, "incoming")
-
-def on_failure_callback(context):
-    logging.error(f"FAILED: {context['task_instance'].task_id} - {context['exception']}")
-
-def on_success_callback(context):
-    results = context['task_instance'].xcom_pull(task_ids='process_file')
-    n = len(results) if results else 0
-    logging.info(f"Pipeline complete. Processed {n} files.")
+INCOMING_FOLDER = build_path("incoming")
 
 @dag(
     dag_id="dag_dynamic_mapping",
@@ -48,9 +43,8 @@ def dag_dynamic_mapping_etl():
         logging.info("Validating schema...")
         required_columns = {'campaign_id', 'clicks', 'impressions', 'spend', 'event_date'}
 
-        missing_columns = required_columns - set(df.columns)
-        if missing_columns:
-            raise ValueError(f"Missing columns: {missing_columns}")
+        validate_columns(df, required_columns)  # This will raise an error if validation fails
+
         logging.info("Schema validation passed.")
 
         logging.info("Calculating CTR and CPC...")

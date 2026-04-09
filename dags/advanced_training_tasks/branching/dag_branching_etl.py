@@ -1,12 +1,14 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
-from airflow.providers.microsoft.mssql.hooks.mssql import MsSqlHook
 from airflow.operators.python import get_current_context
 from airflow.utils.trigger_rule import TriggerRule
 
+from common.io.mssql import load_to_mssql
+from advanced_training_tasks.paths import build_path
+from advanced_training_tasks.constants import USERS_ACTIVITY_TABLE
+
 import pandas as pd
 import logging
-import os
 
 # retry logic 
 default_args = {
@@ -15,9 +17,7 @@ default_args = {
     "retry_delay": timedelta(minutes=3),
 }
 
-BASE_DIR = os.environ.get('AIRFLOW_DATA_DIR', '/opt/airflow/data')
-CSV_PATH = os.path.join(BASE_DIR, "branching/users_activity_large.csv")
-table_name = "users_activity"
+CSV_PATH = build_path("branching", "users_activity_large.csv")
 
 @dag(
     dag_id="dag_branching_etl", 
@@ -74,18 +74,8 @@ def dag_branching_etl():
         df = pd.read_csv(csv_path)
 
         logging.info("Loading data into SQL Server...")
-        mssql_hook = MsSqlHook(mssql_conn_id="mssql_local")
-        engine = mssql_hook.get_sqlalchemy_engine()
-
-        logging.info("Connection established, loading data...")
-        df.to_sql(
-            name=table_name,
-            con=engine,
-            if_exists="append",
-            index=False,
-        )
-
-        logging.info(f"Data loaded into table {table_name}.")
+        load_to_mssql(df, USERS_ACTIVITY_TABLE, conn_id="mssql_local")
+        logging.info(f"Data loaded into table {USERS_ACTIVITY_TABLE}.")
 
 
     @task(trigger_rule=TriggerRule.NONE_FAILED_MIN_ONE_SUCCESS)
