@@ -18,6 +18,8 @@ You must implement this conditional routing inside an Airflow DAG.
 
 Build a DAG named dag_branching_etl with the following pipeline:
 
+
+```bash
 read_csv
     |
 check_volume
@@ -28,7 +30,7 @@ light_process              heavy_process
     |                          |
     └─────────┬─────────────────┘
           finalize
-
+```
 
 1.  read_csv — read the file, return the file path (NOT the DataFrame) via XCom.
 2.  check_volume — read the file, count rows, return the string 'light_process' or 'heavy_process'. This task must be decorated with @task.branch.
@@ -85,10 +87,12 @@ HTTPServer(('0.0.0.0', 8888), H).serve_forever()"
 
 Build a DAG named dag_sensor_pipeline:
 
+
+```bash
 wait_for_file ──┐
                 ├──► validate_and_load
 wait_for_api  ──┘
-
+```
 
 1.  wait_for_file — use @task.sensor with mode='reschedule', poke_interval=20, timeout=600. Check if any .csv file exists in data/incoming/. Return the file path via PokeReturnValue.
 2.  wait_for_api — use @task.sensor with mode='reschedule', poke_interval=30, timeout=300. Make an HTTP GET to http://localhost:8888/health. Return True only when response status is 200.
@@ -130,6 +134,8 @@ As pipelines grow, a flat list of tasks becomes hard to read and maintain in the
 
 Build a DAG named dag_taskgroups_xcom with the following structure:
 
+
+```bash
 ┌─── group_users ──────────────┐    ┌─── group_campaigns ──────────┐
 │  read_users                  │    │  read_campaigns               │
 │       │                      │    │       │                        │
@@ -140,7 +146,7 @@ Build a DAG named dag_taskgroups_xcom with the following structure:
                         │                          │
                         └──────────┬───────────────┘
                               join_report
-
+```
 
 1.  Create two TaskGroups: group_users and group_campaigns. Each group must be visible as a collapsed unit in the Airflow Graph view.
 2.  push_users_summary — at the end of group_users, explicitly push a dict to XCom using task_instance.xcom_push(key='users_summary', value={...}). The dict must contain: total_rows, unique_users, unique_countries.
@@ -196,7 +202,7 @@ list_files
     |
     |-- process_file[0]  (campaign_eu.csv)
     |-- process_file[1]  (campaign_us.csv)
-    `-- process_file[2]  (campaign_asia.csv)
+    |-- process_file[2]  (campaign_asia.csv)
     |
 consolidate_results
 ```
@@ -256,6 +262,8 @@ Build two DAGs that form a producer-consumer pipeline connected by a Dataset:
 3.  Logs: 'Processing data produced at: {producer_run_timestamp}'.
 4.  Has no start_date and no time-based schedule. It is purely event-driven.
 
+
+```bash
 dag_producer runs (writes users_summary_2026-03-01.json)
        │
        │  [Dataset updated]
@@ -265,7 +273,7 @@ dag_consumer triggered automatically
        │  reads summary + campaign data
        ▼
   joint report logged
-
+```
 
 ### Backfill Section
 
