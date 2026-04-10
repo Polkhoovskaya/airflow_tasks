@@ -191,12 +191,10 @@ Create three CSV files in data/incoming/ before running the DAG:
 Build a DAG named dag_dynamic_mapping:
 
 list_files
-    |
-    ├── process_file[0]  (campaign_eu.csv)
-    ├── process_file[1]  (campaign_us.csv)
-    └── process_file[2]  (campaign_asia.csv)
-    |
-consolidate_results
+├── process_file[0]  (campaign_eu.csv)
+├── process_file[1]  (campaign_us.csv)
+└── process_file[2]  (campaign_asia.csv)
+└── consolidate_results
 
 
 1.  list_files — returns a list of full file paths found in data/incoming/. No hardcoded filenames.
