@@ -190,6 +190,8 @@ Create three CSV files in data/incoming/ before running the DAG:
 
 Build a DAG named dag_dynamic_mapping:
 
+
+```bash
 list_files
     |
     |-- process_file[0]  (campaign_eu.csv)
@@ -197,7 +199,7 @@ list_files
     `-- process_file[2]  (campaign_asia.csv)
     |
 consolidate_results
-
+```
 
 1.  list_files — returns a list of full file paths found in data/incoming/. No hardcoded filenames.
 2.  process_file — decorated with @task. Takes a single file_path argument. Reads the CSV, validates schema, computes CTR and CPC, then returns a dict: {'file': filename, 'rows': count, 'status': 'ok' or 'empty'}. This task is mapped using .expand(file_path=list_files()).
