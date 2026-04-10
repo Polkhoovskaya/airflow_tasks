@@ -1,9 +1,9 @@
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
 from airflow.sensors.base import PokeReturnValue
 from airflow.operators.python import get_current_context
 
 from advanced_training_tasks.paths import build_path
+from advanced_training_tasks.constants import DEFAULT_START_DATE
 
 import os
 import requests
@@ -28,7 +28,7 @@ def sensor_failure_callback():
 
 @dag(
     dag_id = "sensor_pipeline",
-    start_date = datetime(2026, 4, 5),
+    start_date = DEFAULT_START_DATE,
     catchup=False,
     tags=["sensor", "task"]
 )

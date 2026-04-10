@@ -1,5 +1,5 @@
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
+from datetime import datetime
 from airflow.operators.python import get_current_context
 
 from advanced_training_tasks.paths import build_path

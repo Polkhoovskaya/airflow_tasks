@@ -15,11 +15,10 @@
 # 5 dataset events → 1 consumer DAG run
 
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
 from airflow.datasets import Dataset
 
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import USERS_SUMMARY_DATASET
+from advanced_training_tasks.constants import USERS_SUMMARY_DATASET, DEFAULT_START_DATE
 
 import pandas as pd
 import logging
@@ -28,7 +27,7 @@ CSV_PATH = build_path("users_activity.csv")
 
 @dag(
     dag_id='dag_producer',
-    start_date=datetime(2026, 4, 6),
+    start_date=DEFAULT_START_DATE,
     tags=["producer", "task"],
     schedule="@daily",
     catchup=True,

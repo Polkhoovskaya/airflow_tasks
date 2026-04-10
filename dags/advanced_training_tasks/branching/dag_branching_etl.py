@@ -1,11 +1,10 @@
 from airflow.decorators import dag, task
-from datetime import datetime
 from airflow.operators.python import get_current_context
 from airflow.utils.trigger_rule import TriggerRule
 
 from common.io.mssql import load_to_mssql
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import USERS_ACTIVITY_TABLE, DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES
+from advanced_training_tasks.constants import USERS_ACTIVITY_TABLE, DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES, DEFAULT_START_DATE
 from common.airflow.defaults import get_default_args
 
 import pandas as pd
@@ -19,7 +18,7 @@ CSV_PATH = build_path("branching", "users_activity_large.csv")
 @dag(
     dag_id="dag_branching_etl", 
     default_args=default_args,
-    start_date=datetime(2026, 4, 5),
+    start_date=DEFAULT_START_DATE,
     schedule="@daily",
     catchup=False,
     tags=["branching", "task"],

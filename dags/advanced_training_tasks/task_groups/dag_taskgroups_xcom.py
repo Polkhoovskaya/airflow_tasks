@@ -1,11 +1,10 @@
 from airflow.decorators import dag, task
-from datetime import datetime
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import get_current_context
 
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES
+from advanced_training_tasks.constants import DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES, DEFAULT_START_DATE
 
 from common.transformation.cleaning import drop_nulls
 from common.transformation.users import users_summary
@@ -21,7 +20,7 @@ default_args = get_default_args(owner=DEFAULT_OWNER, retries=DEFAULT_RETRIES, de
 @dag(
     dag_id="dag_taskgroups_xcom",
     default_args=default_args,
-    start_date=datetime(2026, 4, 6),
+    start_date=DEFAULT_START_DATE,
     schedule="@daily",
     catchup=False,
     tags=["taskgroups", "task"]
