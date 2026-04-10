@@ -42,6 +42,7 @@ light_process              heavy_process
 
 ### Key Concepts to Learn
 
+|     |     |
 | --- | --- |
 | **Concept** | **What to understand** |
 | @task.branch | Returns the task_id (string) of the next task to run. All other downstream branches are skipped automatically. |
@@ -51,6 +52,7 @@ light_process              heavy_process
 
 ### Acceptance Criteria
 
+|     |     |
 | --- | --- |
 | **✓** | **Acceptance Criteria** |
 | □   | Run the DAG with a small file — only light_process runs, heavy_process is pink (skipped). |
@@ -99,6 +101,7 @@ wait_for_api  ──┘
 
 ### Key Concepts to Learn
 
+|     |     |
 | --- | --- |
 | **Concept** | **What to understand** |
 | poke vs reschedule mode | poke holds a worker slot for the entire wait time. reschedule releases the worker between checks — always use reschedule in production to avoid starving the worker pool. |
@@ -108,6 +111,7 @@ wait_for_api  ──┘
 
 ### Acceptance Criteria
 
+|     |     |
 | --- | --- |
 | **✓** | **Acceptance Criteria** |
 | □   | Both sensors appear in the same tier in the Graph view (parallel, not sequential). |
@@ -149,6 +153,7 @@ Build a DAG named dag_taskgroups_xcom with the following structure:
 
 ### Key Concepts to Learn
 
+|     |     |
 | --- | --- |
 | **Concept** | **What to understand** |
 | TaskGroup | A visual and logical grouping. Does not change execution order — it only organizes the Graph view. Nested groups are allowed. |
@@ -158,6 +163,7 @@ Build a DAG named dag_taskgroups_xcom with the following structure:
 
 ### Acceptance Criteria
 
+|     |     |
 | --- | --- |
 | **✓** | **Acceptance Criteria** |
 | □   | Graph view shows two collapsed TaskGroups. Clicking each expands it to show its internal tasks. |
@@ -204,6 +210,7 @@ consolidate_results
 
 ### Key Concepts to Learn
 
+|     |     |
 | --- | --- |
 | **Concept** | **What to understand** |
 | .expand() | Creates one task instance per item in the input list at runtime. The number of instances is not known until list_files runs. |
@@ -214,6 +221,7 @@ consolidate_results
 
 ### Acceptance Criteria
 
+|     |     |
 | --- | --- |
 | **✓** | **Acceptance Criteria** |
 | □   | Adding a 4th CSV file to data/incoming/ causes a 4th task instance to appear in the Grid view — with zero DAG code changes. |
@@ -279,6 +287,7 @@ airflow dags backfill dag_producer \\
 
 ### Key Concepts to Learn
 
+|     |     |
 | --- | --- |
 | **Concept** | **What to understand** |
 | Airflow Dataset | A logical URI that represents a data asset. DAGs declare outlets (what they produce) and other DAGs declare inlets (what they depend on). |
@@ -289,6 +298,7 @@ airflow dags backfill dag_producer \\
 
 ### Acceptance Criteria
 
+|     |     |
 | --- | --- |
 | **✓** | **Acceptance Criteria** |
 | □   | dag_consumer does not appear in the DAG list with a cron schedule — it shows 'Dataset' as its schedule type in the Airflow UI. |
@@ -306,6 +316,7 @@ airflow dags backfill dag_producer \\
 
 ### Common Airflow Patterns
 
+|     |     |
 | --- | --- |
 | **Pattern** | **Correct approach** |
 | Pass data between tasks | Return a file path or ID string. Write data to /tmp/ or a staging table. Never return a DataFrame. |
@@ -340,6 +351,7 @@ airflow dags list-import-errors
 
 ### Trigger Rules Reference
 
+|     |     |
 | --- | --- |
 | **TriggerRule** | **When the task runs** |
 | ALL_SUCCESS (default) | All upstream tasks succeeded. |
