@@ -18,7 +18,8 @@ from airflow.decorators import dag, task
 from airflow.datasets import Dataset
 
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import USERS_SUMMARY_DATASET, DEFAULT_START_DATE
+from advanced_training_tasks.constants import USERS_SUMMARY_DATASET, DEFAULT_START_DATE ,PRODUCER_RUN_TIMESTAMP_VAR
+from common.airflow.variables import write_run_timestamp
 
 import pandas as pd
 import logging
@@ -101,6 +102,9 @@ def producer_etl():
         df.to_json(final_path, orient="records", date_format="iso")
         logging.info(f"Saved summary to {final_path}")
         logging.info("Dataset updated!")
+
+        logging.info("Writing producer run timestamp to Airflow Variable...")
+        write_run_timestamp(PRODUCER_RUN_TIMESTAMP_VAR)
 
         return final_path
 

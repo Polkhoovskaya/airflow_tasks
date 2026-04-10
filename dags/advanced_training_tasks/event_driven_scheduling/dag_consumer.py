@@ -1,9 +1,9 @@
 from airflow.decorators import dag, task
 from datetime import datetime
-from airflow.operators.python import get_current_context
 
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import USERS_SUMMARY_DATASET
+from advanced_training_tasks.constants import USERS_SUMMARY_DATASET, PRODUCER_RUN_TIMESTAMP_VAR
+from common.airflow.variables import read_run_timestamp
 
 import pandas as pd
 import logging
@@ -68,17 +68,14 @@ def consumer_etl():
         campaign_df = pd.read_csv(input_path, parse_dates=["event_date"])
         logging.info(f"Read campaign data with {len(campaign_df)} rows.")
 
-        # join on event_date
+        # Join on event_date
         logging.info("Joining campaign data with user summary...")
         combined_df = pd.merge(campaign_df, summary_df, on="event_date", how="inner")
         logging.info(f"Combined data has {len(combined_df)} rows.")
         logging.info(combined_df)
         logging.info("First 3 rows:\n" + combined_df.head(3).to_string())
 
-        context = get_current_context()
-        producer_run_timestamp = context.get("asset_trigger_timestamp") or datetime.now().isoformat()
-
-        logging.info(f"Processing data produced at: {producer_run_timestamp}")
+        read_run_timestamp(PRODUCER_RUN_TIMESTAMP_VAR)
 
     validated = validate_csv()
     cleaned = clean_data(validated)
