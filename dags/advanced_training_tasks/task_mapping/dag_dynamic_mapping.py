@@ -1,9 +1,12 @@
 from airflow.decorators import dag, task
 from datetime import datetime, timedelta
+from airflow.utils.trigger_rule import TriggerRule
+
 from common.utils.airflow_callbacks import on_failure_callback, on_success_callback
 from common.validation.schema import validate_columns
-
 from advanced_training_tasks.paths import build_path
+from advanced_training_tasks.constants import DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES
+from common.airflow.defaults import get_default_args
 
 import os
 import pandas as pd
@@ -11,8 +14,13 @@ import logging
 
 INCOMING_FOLDER = build_path("incoming")
 
+# retry logic 
+default_args = get_default_args(owner=DEFAULT_OWNER, retries=DEFAULT_RETRIES, delay_minutes=DEFAULT_DELAY_MINUTES)
+
+
 @dag(
     dag_id="dag_dynamic_mapping",
+    default_args=default_args,
     start_date=datetime(2026, 4, 6),
     catchup=False,
     tags=["dynamic_mapping", "task"],
@@ -57,7 +65,7 @@ def dag_dynamic_mapping_etl():
             'status': 'ok' if len(df) > 0 else "empty"
         }
 
-    @task(on_success_callback=on_success_callback)
+    @task(on_success_callback=on_success_callback, trigger_rule=TriggerRule.ALL_DONE)
     def consolidate_results(results: list):
         logging.info("Consolidating results...")
 

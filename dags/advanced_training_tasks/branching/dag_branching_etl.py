@@ -1,21 +1,18 @@
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
+from datetime import datetime
 from airflow.operators.python import get_current_context
 from airflow.utils.trigger_rule import TriggerRule
 
 from common.io.mssql import load_to_mssql
 from advanced_training_tasks.paths import build_path
-from advanced_training_tasks.constants import USERS_ACTIVITY_TABLE
+from advanced_training_tasks.constants import USERS_ACTIVITY_TABLE, DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES
+from common.airflow.defaults import get_default_args
 
 import pandas as pd
 import logging
 
 # retry logic 
-default_args = {
-    "owner": "airflow",
-    "retries": 2,
-    "retry_delay": timedelta(minutes=3),
-}
+default_args = get_default_args(owner=DEFAULT_OWNER, retries=DEFAULT_RETRIES, delay_minutes=DEFAULT_DELAY_MINUTES)
 
 CSV_PATH = build_path("branching", "users_activity_large.csv")
 

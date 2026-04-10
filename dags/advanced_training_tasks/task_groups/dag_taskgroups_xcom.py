@@ -1,25 +1,22 @@
 from airflow.decorators import dag, task
-from datetime import datetime, timedelta
+from datetime import datetime
 from airflow.utils.task_group import TaskGroup
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import get_current_context
 
 from advanced_training_tasks.paths import build_path
+from advanced_training_tasks.constants import DEFAULT_OWNER, DEFAULT_RETRIES, DEFAULT_DELAY_MINUTES
 
 from common.transformation.cleaning import drop_nulls
 from common.transformation.users import users_summary
 from common.transformation.campaigns import campaigns_summary
+from common.airflow.defaults import get_default_args
 
 import logging
 import pandas as pd
 
-
 # retry logic 
-default_args = {
-    "owner": "airflow",
-    "retries": 2,
-    "retry_delay": timedelta(minutes=3),
-}
+default_args = get_default_args(owner=DEFAULT_OWNER, retries=DEFAULT_RETRIES, delay_minutes=DEFAULT_DELAY_MINUTES)
 
 @dag(
     dag_id="dag_taskgroups_xcom",
