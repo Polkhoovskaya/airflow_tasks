@@ -29,6 +29,7 @@ def sensor_failure_callback():
 @dag(
     dag_id = "sensor_pipeline",
     start_date = DEFAULT_START_DATE,
+    schedule = None,
     catchup=False,
     tags=["sensor", "task"]
 )
